@@ -64,6 +64,8 @@
 
    /* L298 Motor driver*/
    #define L298_MOTOR_DRIVER
+
+  //  #define MPU_9250
 #endif
 
 //#define USE_SERVOS  // Enable use of PWM servos as defined in servos.h
@@ -84,6 +86,8 @@
 /* Include definition of serial commands */
 #include "commands.h"
 
+#include "imu.h"
+
 /* Sensor functions */
 #include "sensors.h"
 
@@ -94,6 +98,7 @@
 #endif
 
 #ifdef USE_BASE
+  // #include "imu.h"
   /* Motor driver function definitions */
   #include "motor_driver.h"
 
@@ -173,6 +178,7 @@ int runCommand() {
     Serial.println("OK"); 
     break;
   case DIGITAL_WRITE:
+    pinMode(arg1, OUTPUT);
     if (arg2 == 0) digitalWrite(arg1, LOW);
     else if (arg2 == 1) digitalWrite(arg1, HIGH);
     Serial.println("OK"); 
@@ -255,23 +261,34 @@ void setup() {
     //set as inputs
     DDRD &= ~(1<<LEFT_ENC_PIN_A);
     DDRD &= ~(1<<LEFT_ENC_PIN_B);
-    DDRC &= ~(1<<RIGHT_ENC_PIN_A);
-    DDRC &= ~(1<<RIGHT_ENC_PIN_B);
+    // DDRC &= ~(1<<RIGHT_ENC_PIN_A);
+    // DDRC &= ~(1<<RIGHT_ENC_PIN_B);
     
     //enable pull up resistors
     PORTD |= (1<<LEFT_ENC_PIN_A);
     PORTD |= (1<<LEFT_ENC_PIN_B);
-    PORTC |= (1<<RIGHT_ENC_PIN_A);
-    PORTC |= (1<<RIGHT_ENC_PIN_B);
+    // PORTC |= (1<<RIGHT_ENC_PIN_A);
+    // PORTC |= (1<<RIGHT_ENC_PIN_B);
     
-    // tell pin change mask to listen to left encoder pins
-    PCMSK2 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
-    // tell pin change mask to listen to right encoder pins
-    PCMSK1 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
+    // // tell pin change mask to listen to left encoder pins
+    // PCMSK2 |= (1 << LEFT_ENC_PIN_A)|(1 << LEFT_ENC_PIN_B);
+    // // tell pin change mask to listen to right encoder pins
+    // PCMSK1 |= (1 << RIGHT_ENC_PIN_A)|(1 << RIGHT_ENC_PIN_B);
     
-    // enable PCINT1 and PCINT2 interrupt in the general interrupt mask
-    PCICR |= (1 << PCIE1) | (1 << PCIE2);
+    // // enable PCINT1 and PCINT2 interrupt in the general interrupt mask
+    // PCICR |= (1 << PCIE1) | (1 << PCIE2);
+     // Kích hoạt các ngắt Pin Change cho các chân kênh
+    PCICR |= (1 << PCIE2);  // Kích hoạt PCINT23-16
+    PCMSK2 |= (1 << PCINT18) | (1 << PCINT19);  // Kích hoạt PCINT18 (LEFT_ENC_PIN_A) và PCINT19 (LEFT_ENC_PIN_B)
+
   #endif
+  #ifdef L298_MOTOR_DRIVER
+    pinMode(RIGHT_MOTOR_BACKWARD, OUTPUT);
+    pinMode(LEFT_MOTOR_BACKWARD, OUTPUT);
+    pinMode(RIGHT_MOTOR_FORWARD, OUTPUT);
+    pinMode(LEFT_MOTOR_FORWARD, OUTPUT);
+  #endif
+
   // initMotorController();
   resetPID();
 #endif
